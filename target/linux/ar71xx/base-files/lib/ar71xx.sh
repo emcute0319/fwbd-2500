@@ -573,6 +573,9 @@ ar71xx_board_detect() {
 	"8devices Carambola2"*)
 		name="carambola2"
 		;;
+	"FWBD-2500"*)
+		name="fwbd-2500"
+		;;
 	esac
 
 	case "$machine" in

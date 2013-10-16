@@ -1,0 +1,115 @@
+Index: linux-3.10.15/drivers/net/phy/at803x.c
+===================================================================
+--- linux-3.10.15.orig/drivers/net/phy/at803x.c
++++ linux-3.10.15/drivers/net/phy/at803x.c
+@@ -17,6 +17,8 @@
+ #include <linux/netdevice.h>
+ #include <linux/etherdevice.h>
+ 
++#define AT803X_PHYID1				0x2
++#define AT803X_PHYID2				0x3
+ #define AT803X_INTR_ENABLE			0x12
+ #define AT803X_INTR_STATUS			0x13
+ #define AT803X_WOL_ENABLE			0x01
+@@ -28,6 +30,8 @@
+ #define AT803X_MMD_ACCESS_CONTROL_DATA		0x0E
+ #define AT803X_FUNC_DATA			0x4003
+ 
++#define AT8032_ID2				0xd023
++
+ MODULE_DESCRIPTION("Atheros 803x PHY driver");
+ MODULE_AUTHOR("Matus Ujhelyi");
+ MODULE_LICENSE("GPL");
+@@ -67,10 +71,15 @@ static int at803x_config_init(struct phy
+ 	int val;
+ 	u32 features;
+ 	int status;
++	int id2;
+ 
+ 	features = SUPPORTED_TP | SUPPORTED_MII | SUPPORTED_AUI |
+ 		   SUPPORTED_FIBRE | SUPPORTED_BNC;
+ 
++	id2 = phy_read(phydev, AT803X_PHYID2);
++	if (id2 < 0)
++		return id2;
++
+ 	val = phy_read(phydev, MII_BMSR);
+ 	if (val < 0)
+ 		return val;
+@@ -86,7 +95,7 @@ static int at803x_config_init(struct phy
+ 	if (val & BMSR_10HALF)
+ 		features |= SUPPORTED_10baseT_Half;
+ 
+-	if (val & BMSR_ESTATEN) {
++	if ((id2 != AT8032_ID2) && (val & BMSR_ESTATEN)) {
+ 		val = phy_read(phydev, MII_ESTATUS);
+ 		if (val < 0)
+ 			return val;
+@@ -101,9 +110,11 @@ static int at803x_config_init(struct phy
+ 	phydev->advertising = features;
+ 
+ 	/* enable WOL */
+-	at803x_set_wol_mac_addr(phydev);
+-	status = phy_write(phydev, AT803X_INTR_ENABLE, AT803X_WOL_ENABLE);
+-	status = phy_read(phydev, AT803X_INTR_STATUS);
++	if (id2 != AT8032_ID2) {
++		at803x_set_wol_mac_addr(phydev);
++		status = phy_write(phydev, AT803X_INTR_ENABLE, AT803X_WOL_ENABLE);
++		status = phy_read(phydev, AT803X_INTR_STATUS);
++	}
+ 
+ 	return 0;
+ }
+@@ -138,6 +149,21 @@ static struct phy_driver at8030_driver =
+ 	},
+ };
+ 
++/* ATHEROS 8032 */
++static struct phy_driver at8032_driver = {
++	.phy_id		= 0x004dd023,
++	.name		= "Atheros 8032 ethernet",
++	.phy_id_mask	= 0xffffffef,
++	.config_init	= at803x_config_init,
++	.features	= PHY_BASIC_FEATURES,
++	.flags		= PHY_HAS_INTERRUPT,
++	.config_aneg	= &genphy_config_aneg,
++	.read_status	= &genphy_read_status,
++	.driver		= {
++		.owner = THIS_MODULE,
++	},
++};
++
+ static int __init atheros_init(void)
+ {
+ 	int ret;
+@@ -150,8 +176,14 @@ static int __init atheros_init(void)
+ 	if (ret)
+ 		goto err2;
+ 
++	ret = phy_driver_register(&at8032_driver);
++	if (ret)
++		goto err3;
++
+ 	return 0;
+ 
++err3:
++	phy_driver_unregister(&at8030_driver);
+ err2:
+ 	phy_driver_unregister(&at8035_driver);
+ err1:
+@@ -162,6 +194,7 @@ static void __exit atheros_exit(void)
+ {
+ 	phy_driver_unregister(&at8035_driver);
+ 	phy_driver_unregister(&at8030_driver);
++	phy_driver_unregister(&at8032_driver);
+ }
+ 
+ module_init(atheros_init);
+@@ -170,6 +203,7 @@ module_exit(atheros_exit);
+ static struct mdio_device_id __maybe_unused atheros_tbl[] = {
+ 	{ 0x004dd076, 0xffffffef },
+ 	{ 0x004dd072, 0xffffffef },
++	{ 0x004dd023, 0xffffffef },
+ 	{ }
+ };
+ 

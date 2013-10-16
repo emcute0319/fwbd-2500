@@ -149,3 +149,14 @@ define Profile/PB92/Description
 endef
 
 $(eval $(call Profile,PB92))
+
+define Profile/FWBD2500
+        NAME:=FWBD-2500 board
+        PACKAGES:=kmod-usb-core kmod-usb2
+endef
+
+define Profile/FWBD2500/Description
+        Package set optimized for the FWBD-2500 board.
+endef
+
+$(eval $(call Profile,FWBD2500))

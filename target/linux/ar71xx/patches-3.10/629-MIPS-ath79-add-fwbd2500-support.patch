@@ -1,0 +1,42 @@
+Index: linux-3.10.15/arch/mips/ath79/machtypes.h
+===================================================================
+--- linux-3.10.15.orig/arch/mips/ath79/machtypes.h
++++ linux-3.10.15/arch/mips/ath79/machtypes.h
+@@ -47,6 +47,7 @@ enum ath79_mach_type {
+ 	ATH79_MACH_EW_DORIN,		/* embedded wireless Dorin Platform */
+ 	ATH79_MACH_EW_DORIN_ROUTER,	/* embedded wireless Dorin Router Platform */
+ 	ATH79_MACH_EAP7660D,		/* Senao EAP7660D */
++	ATH79_MACH_FWBD2500,		/* FWBD-2500 */
+ 	ATH79_MACH_JA76PF,		/* jjPlus JA76PF */
+ 	ATH79_MACH_JA76PF2,		/* jjPlus JA76PF2 */
+ 	ATH79_MACH_JWAP003,		/* jjPlus JWAP003 */
+Index: linux-3.10.15/arch/mips/ath79/Kconfig
+===================================================================
+--- linux-3.10.15.orig/arch/mips/ath79/Kconfig
++++ linux-3.10.15/arch/mips/ath79/Kconfig
+@@ -806,6 +806,16 @@ config ATH79_MACH_CARAMBOLA2
+ 	select ATH79_DEV_USB
+ 	select ATH79_DEV_WMAC
+ 
++config ATH79_MACH_FWBD2500
++	bool "FWBD-2500 support"
++	select SOC_AR934X
++	select ATH79_DEV_ETH
++	select ATH79_DEV_GPIO_BUTTONS
++	select ATH79_DEV_LEDS_GPIO
++	select ATH79_DEV_M25P80
++	select ATH79_DEV_USB
++	select ATH79_DEV_WMAC
++
+ endmenu
+ 
+ config SOC_AR71XX
+Index: linux-3.10.15/arch/mips/ath79/Makefile
+===================================================================
+--- linux-3.10.15.orig/arch/mips/ath79/Makefile
++++ linux-3.10.15/arch/mips/ath79/Makefile
+@@ -119,3 +119,4 @@ obj-$(CONFIG_ATH79_MACH_WZR_HP_AG300H)	+
+ obj-$(CONFIG_ATH79_MACH_WZR_HP_G450H)	+= mach-wzr-hp-g450h.o
+ obj-$(CONFIG_ATH79_MACH_ZCN_1523H)	+= mach-zcn-1523h.o
+ obj-$(CONFIG_ATH79_MACH_CARAMBOLA2)	+= mach-carambola2.o
++obj-$(CONFIG_ATH79_MACH_FWBD2500)	+= mach-fwbd-2500.o
